@@ -64,7 +64,9 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
 
   const configExists = await core.getBucketData(device.bucket as string, {
     variables: ["application_id", "downlink_key"],
+    qty: 1,
   });
+  console.log(configExists);
 
   if (!configExists.length) {
     const downlinkKey = (req.headers["X-Downlink-Apikey"] || req.headers["x-downlink-apikey"]) as string | undefined;
@@ -83,11 +85,20 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
       configData.downlink_key = { value: downlinkKey, metadata: { url: downlinkUrl } };
     }
 
-    core.addBucketData(device.id, device.bucket as string, toTagoFormat(configData));
+    core.addBucketData(device.id, device.bucket as string, toTagoFormat(configData)).catch((e) => {
+      console.error(`Error inserting data ${e.message}`);
+      console.error(e);
+    });
   }
 
-  core.addBucketData(device.id, device.bucket as string, data);
-  sendResponse(res, { body: "Data accepted", status: 201 });
+  core
+    .addBucketData(device.id, device.bucket as string, { variable: "ttn_payload_v3", value: JSON.stringify(data) })
+    .catch((e) => {
+      console.error(`Error inserting data ${e.message}`);
+      console.error(e);
+    });
+
+  sendResponse(res, { body: { message: "Data accepted" }, status: 201 });
 }
 
 export default uplinkService;

@@ -38,7 +38,7 @@ const encoder = new PayloadEncoderPlugin({
   name: "TTN/TTI Integration",
 });
 
-encoder.onCall(ttnParser);
+encoder.onCall(console.log);
 
 let app;
 NetworkService.onLoad = async (configParams: IConfigParam) => {

@@ -1,79 +1,84 @@
 import toTagoFormat from "../lib/toTagoFormat";
 
-export default function ttnParser(payload: any) {
-  // Just convert lat and lng, or latitude and longitude to TagoIO format.
-  function transformLatLngToLocation(fields, serie, prefix = "") {
-    if ((fields.latitude && fields.longitude) || (fields.lat && fields.lng)) {
-      const lat = fields.lat || fields.latitude;
-      const lng = fields.lng || fields.longitude;
+function transformLatLngToLocation(fields, serie, prefix = "") {
+  if ((fields.latitude && fields.longitude) || (fields.lat && fields.lng)) {
+    const lat = fields.lat || fields.latitude;
+    const lng = fields.lng || fields.longitude;
 
-      // Change to TagoIO format.
-      // Using variable "location".
-      const variable = {
-        variable: `${prefix}location`,
-        value: `${lat}, ${lng}`,
-        location: { lat, lng },
+    // Change to TagoIO format.
+    // Using variable "location".
+    const variable = {
+      variable: `${prefix}location`,
+      value: `${lat}, ${lng}`,
+      location: { lat, lng },
+      serie,
+    };
+
+    delete fields.latitude; // remove latitude so it's not parsed later
+    delete fields.longitude; // remove latitude so it's not parsed later
+    delete fields.lat; // remove latitude so it's not parsed later
+    delete fields.lng; // remove latitude so it's not parsed later
+
+    return variable;
+  }
+  return null;
+}
+
+function parseGatewayFields(metadata, default_serie) {
+  if (!metadata.gateways) return []; // If gateway fields doesn't exist, just ignore the metadata.
+  let result: any = [];
+
+  // Get only the Gateway fields
+  for (const item of metadata.gateways) {
+    // create a unique serie for each gateway.
+    const serie = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+
+    const location = transformLatLngToLocation(item, serie, "gtw_");
+    if (location) {
+      result.push(location);
+    }
+
+    result = result.concat(toTagoFormat(item, serie));
+  }
+  delete metadata.gateways;
+
+  result = result.concat(toTagoFormat(metadata, default_serie));
+
+  return result;
+}
+
+function inspectFormat(object_item: any, serie: string, old_key?: string) {
+  let result: any = [];
+  for (const key in object_item) {
+    if (key === "lng".toLowerCase() || key.toLowerCase() === "longitude") continue;
+    else if (key === "lat".toLowerCase() || key.toLowerCase() === "latitude") {
+      const lng = object_item.lng || object_item.longitude || object_item.Longitude;
+      result.push({
+        variable: old_key ? `${old_key}_location`.toLowerCase() : "location",
+        value: `${object_item[key]}, ${lng}`,
+        location: { lat: Number(object_item[key]), lng: Number(lng) },
         serie,
-      };
-
-      delete fields.latitude; // remove latitude so it's not parsed later
-      delete fields.longitude; // remove latitude so it's not parsed later
-      delete fields.lat; // remove latitude so it's not parsed later
-      delete fields.lng; // remove latitude so it's not parsed later
-
-      return variable;
+      });
+    } else if (typeof object_item[key] === "object") {
+      result = result.concat(inspectFormat(object_item[key], serie, key));
+    } else {
+      result.push({
+        variable: old_key ? `${old_key}_${key}`.toLowerCase() : `${key}`.toLowerCase(),
+        value: object_item[key],
+        serie,
+      });
     }
-    return null;
   }
 
-  function parseGatewayFields(metadata, default_serie) {
-    if (!metadata.gateways) return []; // If gateway fields doesn't exist, just ignore the metadata.
-    let result: any = [];
+  return result;
+}
 
-    // Get only the Gateway fields
-    for (const item of metadata.gateways) {
-      // create a unique serie for each gateway.
-      const serie = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-
-      const location = transformLatLngToLocation(item, serie, "gtw_");
-      if (location) {
-        result.push(location);
-      }
-
-      result = result.concat(toTagoFormat(item, serie));
-    }
-    delete metadata.gateways;
-
-    result = result.concat(toTagoFormat(metadata, default_serie));
-
-    return result;
+export default function ttnParser(payload: any) {
+  console.log(payload);
+  if (!Array.isArray(payload)) {
+    return payload;
   }
-
-  function inspectFormat(object_item: any, serie: string, old_key?: string) {
-    let result: any = [];
-    for (const key in object_item) {
-      if (key === "lng".toLowerCase() || key.toLowerCase() === "longitude") continue;
-      else if (key === "lat".toLowerCase() || key.toLowerCase() === "latitude") {
-        const lng = object_item.lng || object_item.longitude || object_item.Longitude;
-        result.push({
-          variable: old_key ? `${old_key}_location`.toLowerCase() : "location",
-          value: `${object_item[key]}, ${lng}`,
-          location: { lat: Number(object_item[key]), lng: Number(lng) },
-          serie,
-        });
-      } else if (typeof object_item[key] === "object") {
-        result = result.concat(inspectFormat(object_item[key], serie, key));
-      } else {
-        result.push({
-          variable: old_key ? `${old_key}_${key}`.toLowerCase() : `${key}`.toLowerCase(),
-          value: object_item[key],
-          serie,
-        });
-      }
-    }
-
-    return result;
-  }
+  // Just convert lat and lng, or latitude and longitude to TagoIO format.
   // Check if what is being stored is the ttn_payload.
   // Payload is an environment variable. Is where what is being inserted to your device comes in.
   // Payload always is an array of objects. [ { variable, value...}, {variable, value...} ...]
@@ -168,5 +173,6 @@ export default function ttnParser(payload: any) {
       .concat(toTagoFormat(to_tago, serie));
   }
   payload = payload.filter((x) => !x.location || (x.location.lat !== 0 && x.location.lng !== 0));
+
   return payload;
 }
