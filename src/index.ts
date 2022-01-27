@@ -2,7 +2,7 @@ import { PayloadEncoderPlugin, ServicePlugin } from "@tago-io/tcore-sdk";
 import express from "express";
 import sendResponse from "./lib/sendResponse";
 import downlinkService from "./Services/downlink";
-import ttnParser from "./Services/parser";
+import ttnParser from "./Services/ttnParser";
 import uplinkService from "./Services/uplink";
 import { IConfigParam } from "./types";
 
@@ -38,7 +38,7 @@ const encoder = new PayloadEncoderPlugin({
   name: "TTN/TTI Integration",
 });
 
-encoder.onCall(console.log);
+encoder.onCall = ttnParser;
 
 let app;
 NetworkService.onLoad = async (configParams: IConfigParam) => {
