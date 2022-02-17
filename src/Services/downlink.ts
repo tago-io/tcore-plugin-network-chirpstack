@@ -1,7 +1,6 @@
 import { core } from "@tago-io/tcore-sdk";
 import axios, { AxiosRequestConfig } from "axios";
 import { Request, Response } from "express";
-import parseBody from "../lib/parseBody";
 import sendResponse from "../lib/sendResponse";
 import { IConfigParam } from "../types";
 import { getDevice } from "./uplink";
@@ -38,6 +37,13 @@ interface IClassAConfig {
   url: string;
 }
 
+/**
+ * Send downlink to the device on TTN
+ * @param config TTN configuration
+ * @param req request
+ * @param res request response
+ * @param classAConfig optinal parameter sent by TTN for class A devices
+ */
 async function downlinkService(config: IConfigParam, req: Request, res: Response, classAConfig?: IClassAConfig) {
   const authorization = req.headers["Authorization"] || req.headers["authorization"];
   if (!authorization || authorization !== config.authorization_code) {
@@ -45,7 +51,7 @@ async function downlinkService(config: IConfigParam, req: Request, res: Response
     return sendResponse(res, { body: "Invalid authorization header", status: 401 });
   }
 
-  const body = <IDownlinkParams>parseBody(req);
+  const body = <IDownlinkParams>req.body;
   const port = Number(body.port || 1);
 
   if (!classAConfig?.downlink_key || !classAConfig?.url) {
@@ -77,3 +83,4 @@ async function downlinkService(config: IConfigParam, req: Request, res: Response
 }
 
 export default downlinkService;
+export { IClassAConfig };

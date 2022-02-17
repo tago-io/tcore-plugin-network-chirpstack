@@ -1,6 +1,18 @@
+import { IBucketData } from "@tago-io/tcore-sdk/build/Types";
 import toTagoFormat from "../lib/toTagoFormat";
 
-function inspectFormat(object_item: any, serie: string, old_key?: string) {
+interface InspectObject {
+  [key: string]: string | number | boolean | InspectObject;
+}
+
+/**
+ * Transforms an object to a TagoIO data array object
+ * Works with nested object as value
+ * @param object_item object data to be parsed
+ * @param serie default serie for all data
+ * @param old_key internal use for object values
+ */
+function inspectFormat(object_item: InspectObject, serie: string, old_key?: string) {
   let result: any = [];
   for (const key in object_item) {
     if (key === "lng".toLowerCase() || key.toLowerCase() === "longitude") continue;
@@ -13,7 +25,7 @@ function inspectFormat(object_item: any, serie: string, old_key?: string) {
         serie,
       });
     } else if (typeof object_item[key] === "object") {
-      result = result.concat(inspectFormat(object_item[key], serie, key));
+      result = result.concat(inspectFormat(object_item[key] as any, serie, key));
     } else {
       result.push({
         variable: old_key ? `${old_key}_${key}`.toLowerCase() : `${key}`.toLowerCase(),
@@ -23,9 +35,14 @@ function inspectFormat(object_item: any, serie: string, old_key?: string) {
     }
   }
 
-  return result;
+  return result as IBucketData[];
 }
 
+/**
+ * Decode data from TTN
+ * @param payload any payload sent by the device
+ * @returns data to be stored
+ */
 export default async function ttnParser(payload: any) {
   if (Array.isArray(payload)) {
     return payload;
@@ -35,7 +52,7 @@ export default async function ttnParser(payload: any) {
     return payload;
   }
 
-  let to_tago: any = {};
+  let to_tago: InspectObject = {};
   const serie = String(new Date().getTime());
 
   if (payload.location_solved) {
@@ -71,7 +88,8 @@ export default async function ttnParser(payload: any) {
 
     delete payload.rx_metadata;
   }
-  let decoded = [];
+
+  let decoded: IBucketData[] = [];
   if (payload.decoded_payload && Object.keys(payload.decoded_payload).length) {
     decoded = inspectFormat(payload.decoded_payload, serie);
     to_tago = { ...to_tago, frm_payload: Buffer.from(payload.frm_payload, "base64").toString("hex") };
@@ -79,11 +97,11 @@ export default async function ttnParser(payload: any) {
   }
 
   if (payload.settings) {
-    to_tago = { ...to_tago, ...inspectFormat(payload.settings, serie) };
+    decoded = decoded.concat(inspectFormat(payload.settings, serie));
   }
 
   payload = decoded.concat(toTagoFormat(to_tago, serie));
   payload = payload.filter((x) => !x.location || (x.location.lat !== 0 && x.location.lng !== 0));
 
-  return payload;
+  return payload as IBucketData[];
 }

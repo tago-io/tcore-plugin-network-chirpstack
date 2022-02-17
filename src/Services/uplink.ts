@@ -2,8 +2,7 @@ import { core } from "@tago-io/tcore-sdk";
 import { Request, Response } from "express";
 import { IConfigParam } from "../types";
 import sendResponse from "../lib/sendResponse";
-import parseBody from "../lib/parseBody";
-import toTagoFormat from "../lib/toTagoFormat";
+import toTagoFormat, { IToTagoObject } from "../lib/toTagoFormat";
 
 interface IPayloadParamsTTI {
   //TTI
@@ -47,13 +46,13 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
     return sendResponse(res, { body: "Invalid authorization header", status: 401 });
   }
 
-  const data: IPayloadParamsTTI = parseBody(req);
+  const data: IPayloadParamsTTI = req.body;
   if (!data.end_device_ids) {
     console.error(`[Network Server] Request refused, body is invalid`);
     return sendResponse(res, { body: "Invalid body received", status: 401 });
   }
 
-  const { dev_eui, application_ids, device_id } = data.end_device_ids;
+  const { dev_eui, device_id } = data.end_device_ids;
   const device = await getDevice(dev_eui).catch((e) => {
     return sendResponse(res, { body: e.message || e, status: 400 });
   });
@@ -71,17 +70,13 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
     const downlinkKey = (req.headers["X-Downlink-Apikey"] || req.headers["x-downlink-apikey"]) as string | undefined;
     const downlinkUrl = (req.headers["X-Downlink-Push"] || req.headers["x-downlink-push"]) as string | undefined;
 
-    const configData: { [key: string]: any } = {};
-    if (application_ids?.application_id) {
-      configData.application_id = application_ids.application_id;
-    }
-
+    const configData: IToTagoObject = {};
     if (device_id) {
       configData.device_id = device_id;
     }
 
     if (downlinkKey) {
-      configData.downlink_key = { value: downlinkKey, metadata: { url: downlinkUrl } };
+      configData.downlink_key = { value: downlinkKey, metadata: { url: downlinkUrl || "" } };
     }
 
     core.addBucketData(device.id, device.bucket as string, toTagoFormat(configData)).catch((e) => {

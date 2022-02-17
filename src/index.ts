@@ -1,4 +1,5 @@
 import { PayloadEncoderPlugin, ServicePlugin } from "@tago-io/tcore-sdk";
+import bodyParser from "body-parser";
 import express from "express";
 import sendResponse from "./lib/sendResponse";
 import downlinkService from "./Services/downlink";
@@ -44,7 +45,11 @@ let app;
 NetworkService.onLoad = async (configParams: IConfigParam) => {
   if (!app) {
     app = express();
-    app.use(express.json());
+    // parse application/x-www-form-urlencoded
+    app.use(bodyParser.urlencoded({ extended: false }));
+
+    // parse application/json
+    app.use(bodyParser.json());
 
     app.listen(configParams.port, () => {
       console.info(`TTN-Integration started at port ${configParams.port}`);
