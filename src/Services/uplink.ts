@@ -2,25 +2,33 @@ import { core } from "@tago-io/tcore-sdk";
 import { Request, Response } from "express";
 import { IConfigParam } from "../types";
 import sendResponse from "../lib/sendResponse";
-import toTagoFormat, { IToTagoObject } from "../lib/toTagoFormat";
 
-interface IPayloadParamsTTI {
-  //TTI
-  end_device_ids: {
-    dev_eui: string;
-    device_id: string;
-    application_ids: {
-      application_id: string;
-    };
-  };
-  uplink_message: {
-    f_cnt: number;
-    f_port: number;
-    frm_payload: string;
-  };
-  downlink_url?: string;
+interface IChirpstackPayload {
+  applicationID: string;
+  applicationName: string;
+  deviceName: string;
+  devEUI: string;
+  devAddr: string;
+  rxInfo: {}[];
+  txInfo: {};
+  adr: boolean;
+  dr: number;
+  fCnt: number;
+  fPort: number;
+  data?: string;
+  payload?: string;
+  objectJSON: string;
+  tags: {};
+  margin: number;
+  externalPowerSource: boolean;
+  batteryLevelUnavailable: boolean;
+  batteryLevel: number;
 }
 
+/**
+ * Find the device in the TagoCore using tag serial
+ * @param dev_eui serial value tag
+ */
 async function getDevice(dev_eui: string) {
   const device_list = await core.getDeviceList({
     amount: 10000,
@@ -39,6 +47,9 @@ async function getDevice(dev_eui: string) {
   return device;
 }
 
+/**
+ * Handles the Uplink from Chirpstack
+ */
 async function uplinkService(config: IConfigParam, req: Request, res: Response) {
   const authorization = req.headers["Authorization"] || req.headers["authorization"];
   if (!authorization || authorization !== config.authorization_code) {
@@ -46,43 +57,24 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
     return sendResponse(res, { body: "Invalid authorization header", status: 401 });
   }
 
-  const data: IPayloadParamsTTI = req.body;
-  if (!data.end_device_ids) {
+  const data: IChirpstackPayload = req.body;
+  if (!data.devEUI) {
     console.error(`[Network Server] Request refused, body is invalid`);
     return sendResponse(res, { body: "Invalid body received", status: 401 });
   }
 
-  const { dev_eui, device_id } = data.end_device_ids;
-  const device = await getDevice(dev_eui).catch((e) => {
+  const { devEUI: h_serial } = data;
+  let hardware_serial = Buffer.from(h_serial, "base64").toString("hex");
+  if (hardware_serial.length !== 16) {
+    hardware_serial = h_serial;
+  }
+
+  const device = await getDevice(hardware_serial).catch((e) => {
     return sendResponse(res, { body: e.message || e, status: 400 });
   });
 
   if (!device) {
     return;
-  }
-
-  const configExists = await core.getBucketData(device.bucket as string, {
-    variables: ["downlink_key"],
-    qty: 1,
-  });
-
-  if (!configExists.length) {
-    const downlinkKey = (req.headers["X-Downlink-Apikey"] || req.headers["x-downlink-apikey"]) as string | undefined;
-    const downlinkUrl = (req.headers["X-Downlink-Push"] || req.headers["x-downlink-push"]) as string | undefined;
-
-    const configData: IToTagoObject = {};
-    if (device_id) {
-      configData.device_id = device_id;
-    }
-
-    if (downlinkKey) {
-      configData.downlink_key = { value: downlinkKey, metadata: { url: downlinkUrl || "" } };
-    }
-
-    core.addBucketData(device.id, device.bucket as string, toTagoFormat(configData)).catch((e) => {
-      console.error(`Error inserting data ${e.message}`);
-      console.error(e);
-    });
   }
 
   core.addBucketData(device.id, device.bucket as string, data).catch((e) => {
@@ -94,4 +86,4 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
 }
 
 export default uplinkService;
-export { getDevice };
+export { getDevice, IChirpstackPayload };

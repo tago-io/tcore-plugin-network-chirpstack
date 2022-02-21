@@ -1,5 +1,5 @@
 {
-  "name": "@tago-io/tcore-plugin-network-ttn",
+  "name": "@tago-io/tcore-plugin-network-chirpstack",
   "version": "0.0.1",
   "private": false,
   "main": "./build/index.js",
@@ -7,13 +7,14 @@
     "tagocore": "~1.0.0"
   },
   "tagocore": {
-    "name": "TTN/TTI Integration",
-    "short_description": "Add support for TTN/TTI integration",
+    "name": "Chirpstack LoRaWAN",
+    "short_description": "Add support for Chirpstack integration",
     "full_description": "./README.md",
     "icon": "./assets/icon.png",
     "types": [
       "service",
-      "encoder"
+      "encoder",
+      "action-type"
     ],
     "permissions": [
       "device"
