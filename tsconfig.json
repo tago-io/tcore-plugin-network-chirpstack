@@ -12,10 +12,11 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "rootDir": "./src",
     "baseUrl": ".",
-    "declaration": false
+    "declaration": false,
+    "noEmitOnError": true
   },
   "exclude": [
     "node_module",
