@@ -1,4 +1,4 @@
-import { ActionTypePlugin, PayloadEncoderPlugin, ServicePlugin } from "@tago-io/tcore-sdk";
+import { ActionTypeModule, PayloadEncoderModule, ServiceModule } from "@tago-io/tcore-sdk";
 import bodyParser from "body-parser";
 import express from "express";
 import sendResponse from "./lib/sendResponse";
@@ -8,7 +8,7 @@ import parser from "./Services/parser";
 import uplinkService from "./Services/uplink";
 import { IConfigParam } from "./types";
 
-const NetworkService = new ServicePlugin({
+const NetworkService = new ServiceModule({
   id: "network-chirpstack",
   name: "Chirpstack LoRaWAN",
   configs: [
@@ -55,15 +55,14 @@ const NetworkService = new ServicePlugin({
   ],
 });
 
-const encoder = new PayloadEncoderPlugin({
+const encoder = new PayloadEncoderModule({
   id: "network-chirpstack-encoder",
   name: "Chirpstack LoRaWAN",
 });
 
 encoder.onCall = parser;
 
-
-const action = new ActionTypePlugin({
+const action = new ActionTypeModule({
   id: "chirpstack-downlink-trigger",
   name: "Chirpstack downlink",
   option: {
@@ -108,8 +107,8 @@ const action = new ActionTypePlugin({
   },
 });
 
-let pluginConfig;
-action.onCall = (...params) => downlinkAction(pluginConfig, ...params);
+let pluginConfig: IConfigParam | undefined;
+action.onCall = (...params) => downlinkAction(pluginConfig as IConfigParam, ...params);
 
 let app = express();
 NetworkService.onLoad = async (configParams: IConfigParam) => {
@@ -134,9 +133,7 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
   // app.post("/error", (req, res) => res.send(""));
   app.get("/status", (req, res) => sendResponse(res, { body: { status: true, message: "Running" }, status: 200 }));
 
-  app.use(function (req, res) {
-    res.redirect("/");
-  });
+  app.use((req, res) => res.redirect("/"));
 };
 
 NetworkService.onDestroy = async () => console.log("stopped");

@@ -1,5 +1,6 @@
 import { core } from "@tago-io/tcore-sdk";
 import { Request, Response } from "express";
+import { IDevice } from "@tago-io/tcore-sdk/build/Types";
 import { IConfigParam } from "../types";
 import sendResponse from "../lib/sendResponse";
 
@@ -26,20 +27,22 @@ interface IChirpstackPayload {
 }
 
 /**
- * Find the device in the TagoCore using tag serial
- * @param dev_eui serial value tag
+ * Check if the device exists in the application by the serial tag.
+ *
+ * @param devEui - device eui
+ * @returns {IDevice} device information
  */
-async function getDevice(dev_eui: string) {
-  const device_list = await core.getDeviceList({
+async function getDevice(devEui: string) {
+  const deviceList = await core.getDeviceList({
     amount: 10000,
     page: 1,
-    fields: ["id", "name", "tags", "bucket"],
+    fields: ["id", "name", "tags"],
   });
 
-  if (!device_list || !device_list.length) {
+  if (!deviceList || !deviceList.length) {
     throw "Authorization Denied: Device EUI doesn't match any serial tag";
   }
-  const device = device_list.find((x) => x.tags.find((tag) => tag.key === "serial" && tag.value === dev_eui));
+  const device = deviceList.find((x) => x.tags.find((tag) => tag.key === "serial" && tag.value === devEui));
   if (!device) {
     throw "Authorization Denied: Device EUI doesn't match any serial tag";
   }
@@ -48,7 +51,12 @@ async function getDevice(dev_eui: string) {
 }
 
 /**
- * Handles the Uplink from Chirpstack
+ * Authorize and accept uplink request
+ *
+ * @param config - Plugin configuration
+ * @param req - express req param
+ * @param res - express res param
+ * @returns {void}
  */
 async function uplinkService(config: IConfigParam, req: Request, res: Response) {
   const authorization = req.headers["Authorization"] || req.headers["authorization"];
@@ -63,13 +71,13 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
     return sendResponse(res, { body: "Invalid body received", status: 401 });
   }
 
-  const { devEUI: h_serial } = data;
-  let hardware_serial = Buffer.from(h_serial, "base64").toString("hex");
-  if (hardware_serial.length !== 16) {
-    hardware_serial = h_serial;
+  const { devEUI: hSerial } = data;
+  let hardwareSerial = Buffer.from(hSerial, "base64").toString("hex");
+  if (hardwareSerial.length !== 16) {
+    hardwareSerial = hSerial;
   }
 
-  const device = await getDevice(hardware_serial).catch((e) => {
+  const device = await getDevice(hardwareSerial).catch((e) => {
     return sendResponse(res, { body: e.message || e, status: 400 });
   });
 
@@ -77,7 +85,7 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
     return;
   }
 
-  core.addBucketData(device.id, device.bucket as string, data).catch((e) => {
+  core.addDeviceData(device.id, data).catch((e) => {
     console.error(`Error inserting data ${e.message}`);
     console.error(e);
   });

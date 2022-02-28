@@ -1,38 +1,47 @@
-import { IBucketData } from "@tago-io/tcore-sdk/build/Types";
+import { IDeviceDataCreate } from "@tago-io/tcore-sdk/build/Types";
 
+interface IDeviceDataLatLng extends Omit<IDeviceDataCreate, "location"> {
+  location?: { lat: number; lng: number };
+}
 interface IToTagoObject {
   [key: string]: string | number | boolean | IToTagoObject;
 }
 
 /**
  * Transforms an object to a TagoIO data array object
- * @param object_item object data to be parsed
- * @param serie default serie for all data
- * @param old_key internal use for object values
+ *
+ * @param objectItem - object data to be parsed
+ * @param group - default group for all data
+ * @param prefix - internal use for object values
+ * @returns {IDeviceDataLatLng} formatted data
  */
-function toTagoFormat(object_item: IToTagoObject, serie?: string, prefix = "") {
+function toTagoFormat(objectItem: IToTagoObject, group?: string, prefix = "") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const objectItemCopy: any = objectItem;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: any = [];
-  for (const key in object_item) {
-    if (typeof object_item[key] === "object") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const key in objectItemCopy) {
+    if (typeof objectItem[key] === "object") {
       result.push({
-        variable: (object_item[key]["variable"] || `${prefix}${key}`).toLowerCase(),
-        value: object_item[key]["value"],
-        serie: object_item[key]["serie"] || serie,
-        metadata: object_item[key]["metadata"],
-        location: object_item[key]["location"],
-        unit: object_item[key]["unit"],
+        variable: (objectItemCopy[key]["variable"] || `${prefix}${key}`).toLowerCase(),
+        value: objectItemCopy[key]["value"],
+        group: objectItemCopy[key]["serie"] || group,
+        metadata: objectItemCopy[key]["metadata"],
+        location: objectItemCopy[key]["location"],
+        unit: objectItemCopy[key]["unit"],
       });
     } else {
       result.push({
         variable: `${prefix}${key}`.toLowerCase(),
-        value: object_item[key],
-        serie,
+        value: objectItemCopy[key],
+        group,
       });
     }
   }
 
-  return result as IBucketData[];
+  return result as IDeviceDataLatLng;
 }
 
 export default toTagoFormat;
-export { IToTagoObject };
+export { IToTagoObject, IDeviceDataLatLng };

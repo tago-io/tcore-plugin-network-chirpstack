@@ -4,7 +4,7 @@
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tagocore": "~1.0.0"
+    "tagocore": "<= 0.3.0"
   },
   "tagocore": {
     "name": "Chirpstack LoRaWAN",
@@ -17,7 +17,9 @@
       "action-type"
     ],
     "permissions": [
-      "device"
+      "device",
+      "action",
+      "device-data"
     ]
   },
   "scripts": {
