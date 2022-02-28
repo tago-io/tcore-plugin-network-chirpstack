@@ -1,56 +1,76 @@
-import { IBucketData } from "@tago-io/tcore-sdk/build/Types";
-import toTagoFormat from "../lib/toTagoFormat";
+import toTagoFormat, { IDeviceDataLatLng } from "../lib/toTagoFormat";
 
+interface IRXInfo {
+  time: string;
+  timeSinceGPSEpoch: string;
+  rssi: number;
+  loRaSNR: number;
+  channel: number;
+  rfChain: number;
+  board: string;
+  antenna: number;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  gatewayID: string;
+  fineTimestampType: string;
+  context: string;
+}
 /**
  * Parse the RX Info of the Chirpstack payload. Usually contains gateway information
+ *
+ * @param data - RX info data
+ * @param serie - serie of the group
+ * @returns
  */
-function parseRxInfo(data: any, serie: string) {
-  const result: Partial<IBucketData>[] = [];
+function parseRxInfo(data: IRXInfo[], group: string) {
+  const result: IDeviceDataLatLng[] = [];
   for (let i = 0; i < data.length; ++i) {
     // gatewayID (base64)
     if (data[i].gatewayID)
       result.push({
         variable: `rx_${i}_gateway_id`,
         value: Buffer.from(data[i].gatewayID, "base64").toString("hex"),
-        serie,
+        group,
       });
     // time (string)
-    if (data[i].time) result.push({ variable: `rx_${i}_time`, value: data[i].time, serie });
+    if (data[i].time) result.push({ variable: `rx_${i}_time`, value: data[i].time, group });
     // time since gps epoch
     if (data[i].timeSinceGPSEpoch)
-      result.push({ variable: `rx_${i}_time_since_gps_epoch`, value: data[i].timeSinceGPSEpoch, serie });
+      result.push({ variable: `rx_${i}_time_since_gps_epoch`, value: data[i].timeSinceGPSEpoch, group });
     // rssi (integer)
-    if (data[i].rssi) result.push({ variable: `rx_${i}_rssi`, value: data[i].rssi, serie });
+    if (data[i].rssi) result.push({ variable: `rx_${i}_rssi`, value: data[i].rssi, group });
     // loRaSNR (integer)
-    if (data[i].loRaSNR) result.push({ variable: `rx_${i}_lorasnr`, value: data[i].loRaSNR, serie });
+    if (data[i].loRaSNR) result.push({ variable: `rx_${i}_lorasnr`, value: data[i].loRaSNR, group });
     // channel (integer)
-    if (data[i].channel) result.push({ variable: `rx_${i}_channel`, value: data[i].channel, serie });
+    if (data[i].channel) result.push({ variable: `rx_${i}_channel`, value: data[i].channel, group });
     // rfChain (integer)
-    if (data[i].rfChain) result.push({ variable: `rx_${i}_rf_chain`, value: data[i].rfChain, serie });
+    if (data[i].rfChain) result.push({ variable: `rx_${i}_rf_chain`, value: data[i].rfChain, group });
     // board (integer)
-    if (data[i].board) result.push({ variable: `rx_${i}_board`, value: data[i].board, serie });
+    if (data[i].board) result.push({ variable: `rx_${i}_board`, value: data[i].board, group });
     // antenna (integer)
-    if (data[i].antenna) result.push({ variable: `rx_${i}_antenna`, value: data[i].antenna, serie });
+    if (data[i].antenna) result.push({ variable: `rx_${i}_antenna`, value: data[i].antenna, group });
     // location latitude (double)
     if (data[i].location && data[i].location.latitude && data[i].location.longitude) {
       result.push({
         variable: `rx_${i}_location`,
         value: `${data[i].location.latitude},${data[i].location.longitude}`,
-        location: { type: "point", coordinates: [data[i].location.longitude, data[i].location.latitude] },
-        serie,
+        location: { lng: data[i].location.longitude, lat: data[i].location.latitude },
+        group,
       });
     }
 
-    // result.push({ variable: `rx_${i}_location_altitude`, value: data[i].location.altitude, serie: serie });
+    // result.push({ variable: `rx_${i}_location_altitude`, value: data[i].location.altitude, group: group });
     // // fine timestamp type (string)
     if (data[i].fineTimestampType)
-      result.push({ variable: `rx_${i}_fine_timestamp_type`, value: data[i].fineTimestampType, serie });
+      result.push({ variable: `rx_${i}_fine_timestamp_type`, value: data[i].fineTimestampType, group });
     // context (base64)
     if (data[i].context)
       result.push({
         variable: `rx_${i}_context`,
         value: Buffer.from(data[i].context, "base64").toString("hex"),
-        serie,
+        group,
       });
     // // // uplink id (base64)
     // // result.push({ variable: `rx_${i}_uplink_id`, value: Buffer.from(data[i].uplinkID, "base64").toString("hex"), serie: serie });
@@ -59,11 +79,27 @@ function parseRxInfo(data: any, serie: string) {
   return result;
 }
 
+interface ITxInfo {
+  frequency: number;
+  modulation: string;
+  loRaModulationInfo: {
+    bandwidth: number;
+    spreadingFactor: number;
+    codeRate: number;
+    polarizationInversion: number;
+  };
+}
+
 /**
  * Parse the TX Info of the Chirpstack payload. Usually contains transceiver information
+ *
+ * @param data - TX data
+ * @param serie - = serie of the group
+ * @returns
  */
-function parseTxInfo(data: any, serie: string) {
-  const result: Partial<IBucketData>[] = [];
+function parseTxInfo(data: ITxInfo, serie: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: IDeviceDataLatLng[] = [];
 
   // frequency (integer)
   if (data.frequency) result.push({ variable: "frequency", value: data.frequency, serie });
@@ -84,9 +120,11 @@ function parseTxInfo(data: any, serie: string) {
 
 /**
  * Decode data from Chirpstack
- * @param payload any payload sent by the device
+ *
+ * @param payload - any payload sent by the device
  * @returns data to be stored
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function parser(payload: any) {
   if (Array.isArray(payload)) {
     return payload;
@@ -96,7 +134,7 @@ export default async function parser(payload: any) {
     return payload;
   }
 
-  let to_tago: IBucketData[] = [];
+  let toTago: IDeviceDataLatLng[] = [];
   const serie = String(new Date().getTime());
 
   // rename
@@ -141,24 +179,22 @@ export default async function parser(payload: any) {
 
   // Parse rx info
   if (payload.rxInfo) {
-    to_tago = to_tago.concat(parseRxInfo(payload.rxInfo, serie) as any);
+    toTago = toTago.concat(parseRxInfo(payload.rxInfo, serie));
     delete payload.rxInfo;
   }
   // Parse tx info
   if (payload.txInfo) {
-    to_tago = to_tago.concat(parseTxInfo(payload.txInfo, serie) as any);
+    toTago = toTago.concat(parseTxInfo(payload.txInfo, serie));
     delete payload.txInfo;
   }
   // Tags
   if (payload.tags) {
-    to_tago = to_tago.concat(toTagoFormat(payload.tags, serie));
+    toTago = toTago.concat(toTagoFormat(payload.tags, serie));
     delete payload.tags;
   }
 
-  to_tago = to_tago.concat(toTagoFormat(payload, serie));
+  toTago = toTago.concat(toTagoFormat(payload, serie));
+  toTago = toTago.filter((x) => !x.location || (x.location.lat !== 0 && x.location.lng !== 0));
 
-  payload = to_tago;
-  payload = payload.filter((x) => !x.location || (x.location.lat !== 0 && x.location.lng !== 0));
-
-  return payload as IBucketData[];
+  return toTago;
 }

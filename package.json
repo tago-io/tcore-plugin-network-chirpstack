@@ -4,7 +4,7 @@
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tagocore": "~1.0.0"
+    "tagocore": "<= 0.3.0"
   },
   "tagocore": {
     "name": "Chirpstack LoRaWAN",
@@ -17,7 +17,9 @@
       "action-type"
     ],
     "permissions": [
-      "device"
+      "device",
+      "action",
+      "device-data"
     ]
   },
   "scripts": {
@@ -25,7 +27,7 @@
     "build": "rm -rf ./build; tsc"
   },
   "dependencies": {
-    "@tago-io/tcore-sdk": "*",
+    "@tago-io/tcore-sdk": "0.0.1-alpha.6",
     "async": "3.2.1",
     "axios": "^0.25.0",
     "body-parser": "^1.19.2",
@@ -37,13 +39,13 @@
     "@types/express": "^4.17.13",
     "@types/ms": "^0.7.31",
     "@types/node": "16.7.1",
-    "@typescript-eslint/eslint-plugin": "^5.9.1",
-    "@typescript-eslint/parser": "^5.9.1",
-    "eslint": "^8.6.0",
-    "eslint-config-prettier": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "^5.12.1",
+    "@typescript-eslint/parser": "^5.12.1",
+    "eslint": "^8.9.0",
+    "eslint-config-prettier": "^8.4.0",
     "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-jest": "^25.3.4",
+    "eslint-plugin-jsdoc": "^37.9.4",
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "^2.5.1"
   }
