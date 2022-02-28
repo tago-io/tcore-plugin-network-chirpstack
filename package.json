@@ -8,7 +8,7 @@
   },
   "tagocore": {
     "name": "Chirpstack LoRaWAN",
-    "short_description": "Add support for Chirpstack integration",
+    "short_description": "Adds support for Chirpstack LoRaWAN",
     "full_description": "./README.md",
     "icon": "./assets/icon.png",
     "types": [
