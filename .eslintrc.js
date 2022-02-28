@@ -35,6 +35,9 @@ module.exports = {
     "jsdoc/check-indentation": "error",
     "jsdoc/require-param": 0,
     "jsdoc/require-param-type": 0,
+    "jsdoc/require-returns": 0,
+    "jsdoc/require-returns-type": 0,
+    "jsdoc/require-returns-description": 0,
     "prefer-arrow-callback": "error",
     "@typescript-eslint/naming-convention": ["error",
       {

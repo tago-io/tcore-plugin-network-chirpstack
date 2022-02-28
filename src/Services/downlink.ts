@@ -50,7 +50,6 @@ interface IClassAConfig {
  * @param config - Plugin configuration
  * @param req - request
  * @param res - request response
- * @returns void
  */
 async function downlinkService(config: IConfigParam, req: Request, res: Response) {
   const authorization = req.headers["Authorization"] || req.headers["authorization"];

@@ -1,6 +1,10 @@
 {
     "cSpell.words": [
+        "camelcase",
+        "Chirpstack",
         "connack",
+        "esbuild",
+        "outfile",
         "Parens",
         "pingreq",
         "pingresp",

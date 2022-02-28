@@ -17,11 +17,12 @@ interface IRXInfo {
   fineTimestampType: string;
   context: string;
 }
+
 /**
  * Parse the RX Info of the Chirpstack payload. Usually contains gateway information
  *
  * @param data - RX info data
- * @param serie - serie of the group
+ * @param group - group of the group
  * @returns
  */
 function parseRxInfo(data: IRXInfo[], group: string) {
