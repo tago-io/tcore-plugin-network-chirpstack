@@ -45,10 +45,12 @@ interface IClassAConfig {
 }
 
 /**
- * Send downlink to the device at Chirpstack
- * @param config Chirpstack configuration
- * @param req request
- * @param res request response
+ * Send downlink to the device in the Network server
+ *
+ * @param config - Plugin configuration
+ * @param req - request
+ * @param res - request response
+ * @returns void
  */
 async function downlinkService(config: IConfigParam, req: Request, res: Response) {
   const authorization = req.headers["Authorization"] || req.headers["authorization"];

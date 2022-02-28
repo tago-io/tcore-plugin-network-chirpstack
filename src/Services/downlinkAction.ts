@@ -1,53 +1,72 @@
 import { core } from "@tago-io/tcore-sdk";
+import { IDeviceData } from "@tago-io/tcore-sdk/build/Types";
 import { IConfigParam } from "../types";
 import downlinkService, { IDownlinkParams } from "./downlink";
 
-const resMockup: any = {
-  json: () => this,
-  status: () => this,
-};
+class ResMockup {
+  _status = 200;
+  json(body: {}) {
+    if (this._status >= 400) {
+      console.error(body);
+    }
+    return this;
+  }
+  status(newStatus: number) {
+    this._status = newStatus;
+    return this;
+  }
+  jsonp() {
+    return this;
+  }
+}
 
 /**
  * Executed for Action downlink type.
- * @param config Chirpstack configuration
- * @param classAConfig optinal parameter sent by Chirpstack for class A devices
+ *
+ * @param pluginConfig - Network plugin configuration
+ * @param actionID - action ID that triggered the downlink
+ * @param actionSettings - action settings that triggered the downlink
+ * @param dataList - device data from the action
  */
 async function downlinkAction(
   pluginConfig: IConfigParam,
-  action_id: string,
-  action_settings: IDownlinkParams,
-  data_list: any
+  actionID: string,
+  actionSettings: IDownlinkParams,
+  dataList: IDeviceData
 ) {
-  const action = await core.getActionInfo(action_id);
+  const action = await core.getActionInfo(actionID);
 
-  if (Array.isArray(data_list) && data_list[0].variable) {
-    const variables = action.trigger.conditions.map((condition) => condition.variable);
-    const data = data_list.find((item) => variables.includes(item.variable));
+  if (Array.isArray(dataList) && dataList[0].variable) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const variables = action.trigger.conditions.map((condition: any) => condition.variable);
+    const data = dataList.find((item) => variables.includes(item.variable));
 
-    action_settings.payload = action_settings.payload.replace(/\$VALUE\$/g, data.value);
-    action_settings.payload = action_settings.payload.replace(/\$VARIABLE\$/g, data.variable);
-    action_settings.payload = action_settings.payload.replace(/\$SERIE\$/g, data.serie);
+    actionSettings.payload = actionSettings.payload.replace(/\$VALUE\$/g, data.value);
+    actionSettings.payload = actionSettings.payload.replace(/\$VARIABLE\$/g, data.variable);
+    actionSettings.payload = actionSettings.payload.replace(/\$SERIE\$/g, data.serie);
 
-    if (action_settings.device.toLowerCase() === "$device_id$") {
+    if (actionSettings.device.toLowerCase() === "$device_id$") {
       const deviceInfo = await core.getDeviceInfo(data.origin);
-      action_settings.device = deviceInfo.id;
+      actionSettings.device = deviceInfo.id;
     }
   }
 
   // Any, so we don't need to replicate the full req object
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const reqMockup: any = {
     headers: {
       Authorization: pluginConfig.authorization_code,
     },
     body: {
-      device: action_settings.device,
-      payload: action_settings.payload,
-      port: action_settings.port,
-      confirmed: action_settings.confirmed,
+      device: actionSettings.device,
+      payload: actionSettings.payload,
+      port: actionSettings.port,
+      confirmed: actionSettings.confirmed,
     },
   };
 
-  await downlinkService(pluginConfig, reqMockup, resMockup);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await downlinkService(pluginConfig, reqMockup, new ResMockup() as any);
 }
 
 export default downlinkAction;
