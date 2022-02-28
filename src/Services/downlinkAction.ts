@@ -3,11 +3,22 @@ import { IDeviceData } from "@tago-io/tcore-sdk/build/Types";
 import { IConfigParam } from "../types";
 import downlinkService, { IDownlinkParams } from "./downlink";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const resMockup: any = {
-  json: () => this,
-  status: () => this,
-};
+class ResMockup {
+  _status = 200;
+  json(body: {}) {
+    if (this._status >= 400) {
+      console.error(body);
+    }
+    return this;
+  }
+  status(newStatus: number) {
+    this._status = newStatus;
+    return this;
+  }
+  jsonp() {
+    return this;
+  }
+}
 
 /**
  * Executed for Action downlink type.
@@ -16,7 +27,6 @@ const resMockup: any = {
  * @param actionID - action ID that triggered the downlink
  * @param actionSettings - action settings that triggered the downlink
  * @param dataList - device data from the action
- * @returns {void}
  */
 async function downlinkAction(
   pluginConfig: IConfigParam,
@@ -55,7 +65,8 @@ async function downlinkAction(
     },
   };
 
-  await downlinkService(pluginConfig, reqMockup, resMockup);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await downlinkService(pluginConfig, reqMockup, new ResMockup() as any);
 }
 
 export default downlinkAction;
