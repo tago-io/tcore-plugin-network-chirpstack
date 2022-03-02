@@ -1,10 +1,10 @@
 {
   "name": "@tago-io/tcore-plugin-network-chirpstack",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tagocore": "<= 0.3.0"
+    "tagocore": "<= 0.3"
   },
   "tagocore": {
     "name": "Chirpstack LoRaWAN",
