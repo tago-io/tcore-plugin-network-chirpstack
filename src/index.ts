@@ -1,6 +1,7 @@
+import { Server } from "http";
 import { ActionTypeModule, PayloadEncoderModule, ServiceModule } from "@tago-io/tcore-sdk";
 import bodyParser from "body-parser";
-import express from "express";
+import express, { Express } from "express";
 import sendResponse from "./lib/sendResponse";
 import downlinkService from "./Services/downlink";
 import downlinkAction from "./Services/downlinkAction";
@@ -110,11 +111,13 @@ const action = new ActionTypeModule({
 let pluginConfig: IConfigParam | undefined;
 action.onCall = (...params) => downlinkAction(pluginConfig as IConfigParam, ...params);
 
-let app = express();
+let app: Express | undefined;
+let server: Server | undefined;
 NetworkService.onLoad = async (configParams: IConfigParam) => {
-  if (!app) {
-    app = express();
+  if (server) {
+    await server.close();
   }
+  app = express();
   pluginConfig = configParams;
 
   // parse application/x-www-form-urlencoded
@@ -123,7 +126,7 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
   // parse application/json
   app.use(bodyParser.json());
 
-  app.listen(configParams.port, () => {
+  server = app.listen(configParams.port, () => {
     console.info(`Chiprstack started at port ${configParams.port}`);
   });
 
@@ -136,4 +139,9 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
   app.use((req, res) => res.redirect("/"));
 };
 
-NetworkService.onDestroy = async () => console.log("stopped");
+NetworkService.onDestroy = async () => {
+  if (server) {
+    await server.close();
+    server = undefined;
+  }
+};
