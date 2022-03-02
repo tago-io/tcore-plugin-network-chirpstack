@@ -131,7 +131,7 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
 
   try {
     server = await app.listen(configParams.port, () => {
-      console.info(`Helium-Integration started at port ${configParams.port}`);
+      console.info(`Chirpstack-Integration started at port ${configParams.port}`);
     });
   } catch (error) {
     console.log(error);
