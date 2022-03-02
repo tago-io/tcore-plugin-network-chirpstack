@@ -118,17 +118,25 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
     await server.close();
   }
   app = express();
+
   pluginConfig = configParams;
+  if (!pluginConfig.port) {
+    return;
+  }
 
   // parse application/x-www-form-urlencoded
   app.use(bodyParser.urlencoded({ extended: false }));
-
   // parse application/json
   app.use(bodyParser.json());
 
-  server = app.listen(configParams.port, () => {
-    console.info(`Chiprstack started at port ${configParams.port}`);
-  });
+  try {
+    server = await app.listen(configParams.port, () => {
+      console.info(`Helium-Integration started at port ${configParams.port}`);
+    });
+  } catch (error) {
+    console.log(error);
+    return;
+  }
 
   app.get("/", (req, res) => sendResponse(res, { body: { status: true, message: "Running" }, status: 200 }));
   app.post("/uplink", (req, res) => uplinkService(configParams, req, res));
