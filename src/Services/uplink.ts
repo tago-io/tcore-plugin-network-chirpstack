@@ -85,9 +85,15 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
     return;
   }
 
-  core.addDeviceData(device.id, data).catch((e) => {
+  core.emitToLiveInspector(device.id, {
+    title: "Uplink HTTP Request",
+    content: `HOST: ${req.host}`,
+  });
+
+  await core.addDeviceData(device.id, data).catch((e) => {
     console.error(`Error inserting data ${e.message}`);
     console.error(e);
+    sendResponse(res, { body: { message: e.message }, status: 201 });
   });
 
   sendResponse(res, { body: { message: "Data accepted" }, status: 201 });
