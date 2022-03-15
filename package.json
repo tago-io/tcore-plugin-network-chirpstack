@@ -1,10 +1,10 @@
 {
   "name": "@tago-io/tcore-plugin-network-chirpstack",
-  "version": "0.0.2",
+  "version": "0.3.2",
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tagocore": ">= 0.3.2"
+    "tagocore": ">= 0.3.2 < 0.4.0"
   },
   "tagocore": {
     "name": "Chirpstack LoRaWAN",
@@ -23,7 +23,7 @@
     ]
   },
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "node esbuild/build.js --watch",
     "linter": "eslint .",
     "build": "npm run linter; rm -rf ./build; node esbuild/build.js"
   },

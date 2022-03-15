@@ -10,6 +10,8 @@ try {
   //
 }
 
+const dev = process.argv.includes("--watch");
+
 console.log("Starting esbuild...");
 
 esbuild
@@ -20,7 +22,8 @@ esbuild
     target: ["node14"],
     platform: 'node',
     absWorkingDir: path.join(__dirname, "../"),
-    minify: true,
-    sourcemap: false
+    minify: !dev,
+    sourcemap: dev,
+    watch: dev ? { onRebuild: () => console.log("Rebuilding...") } : false,
   })
   .catch(console.log);

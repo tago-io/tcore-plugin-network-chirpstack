@@ -143,7 +143,6 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
 
       server.on("close", () => reject("Server manually closed"));
       server.on("error", (e) => {
-        console.error(e);
         reject(e);
       });
     });
