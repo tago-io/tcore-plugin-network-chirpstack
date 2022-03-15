@@ -90,9 +90,10 @@ async function uplinkService(config: IConfigParam, req: Request, res: Response) 
     content: `HOST: ${req.host}`,
   });
 
-  core.addDeviceData(device.id, data).catch((e) => {
+  await core.addDeviceData(device.id, data).catch((e) => {
     console.error(`Error inserting data ${e.message}`);
     console.error(e);
+    sendResponse(res, { body: { message: e.message }, status: 201 });
   });
 
   sendResponse(res, { body: { message: "Data accepted" }, status: 201 });

@@ -131,10 +131,6 @@ export default async function parser(payload: any) {
     return payload;
   }
 
-  if (!payload.end_device_ids) {
-    return payload;
-  }
-
   let toTago: IDeviceDataLatLng[] = [];
   const serie = String(new Date().getTime());
 
