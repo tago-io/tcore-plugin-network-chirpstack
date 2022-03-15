@@ -65,7 +65,7 @@ encoder.onCall = parser;
 
 const action = new ActionTypeModule({
   id: "chirpstack-downlink-trigger",
-  name: "Chirpstack downlink",
+  name: "Chirpstack Downlink-Action",
   option: {
     description: "Send a downlink to a LoRaWAN Chirpstack device",
     name: "Downlink to Chirpstack Device",
@@ -101,7 +101,6 @@ const action = new ActionTypeModule({
         field: "confirmed",
         type: "boolean",
         tooltip: "Send confirmed parameter to the network server",
-        required: false,
         defaultValue: false,
       },
     ],
@@ -121,7 +120,9 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
 
   pluginConfig = configParams;
   if (!pluginConfig.port) {
-    return;
+    throw "Port not specified";
+  } else if (!pluginConfig.authorization_code) {
+    throw "Authorization code not specified";
   }
 
   // parse application/x-www-form-urlencoded
@@ -129,14 +130,26 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
   // parse application/json
   app.use(bodyParser.json());
 
-  try {
-    server = await app.listen(configParams.port, () => {
-      console.info(`Chirpstack-Integration started at port ${configParams.port}`);
+  const startServer = () => {
+    return new Promise((resolve, reject) => {
+      if (!app) {
+        return reject("Internal error");
+      }
+
+      server = app.listen(configParams.port, () => {
+        console.info(`Chirpstack-Integration started at port ${configParams.port}`);
+        resolve(true);
+      });
+
+      server.on("close", () => reject("Server manually closed"));
+      server.on("error", (e) => {
+        console.error(e);
+        reject(e);
+      });
     });
-  } catch (error) {
-    console.log(error);
-    return;
-  }
+  };
+
+  await startServer();
 
   app.get("/", (req, res) => sendResponse(res, { body: { status: true, message: "Running" }, status: 200 }));
   app.post("/uplink", (req, res) => uplinkService(configParams, req, res));

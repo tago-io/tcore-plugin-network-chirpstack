@@ -1,3 +1,4 @@
+import { core } from "@tago-io/tcore-sdk";
 import axios, { AxiosRequestConfig } from "axios";
 import { Request, Response } from "express";
 import sendResponse from "../lib/sendResponse";
@@ -20,7 +21,7 @@ interface IDownlinkBuild {
 async function sendDownlink({ token, port, payload, url, confirmed, priority }: IDownlinkBuild) {
   const options: AxiosRequestConfig = {
     url,
-    method: "post",
+    method: "POST",
     headers: { Authorization: token },
     data: {
       downlinks: [
@@ -65,7 +66,7 @@ async function downlinkService(config: IConfigParam, req: Request, res: Response
   const body = <IDownlinkParams>req.body;
   const port = Number(body.port || 1);
 
-  await getDevice(body.device);
+  const device = await getDevice(body.device);
 
   if (!config.downlink_token?.toLowerCase().includes("Bearer")) {
     config.downlink_token = `Bearer ${config.downlink_token}`;
@@ -85,6 +86,11 @@ async function downlinkService(config: IConfigParam, req: Request, res: Response
     payload: Buffer.from(body.payload, "hex").toString("base64"),
     url: config.url,
   };
+
+  core.emitToLiveInspector(device.id, {
+    title: "Downlink HTTP Request",
+    content: body,
+  });
 
   return sendDownlink(downlinkBuild)
     .then(() => {

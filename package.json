@@ -4,7 +4,7 @@
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tagocore": "<= 0.3"
+    "tagocore": ">= 0.3.2"
   },
   "tagocore": {
     "name": "Chirpstack LoRaWAN",
@@ -28,7 +28,7 @@
     "build": "npm run linter; rm -rf ./build; node esbuild/build.js"
   },
   "dependencies": {
-    "@tago-io/tcore-sdk": "0.0.1-alpha.7",
+    "@tago-io/tcore-sdk": "0.3.2-alpha.0",
     "axios": "^0.26.0",
     "body-parser": "^1.19.2",
     "express": "^4.17.3"
