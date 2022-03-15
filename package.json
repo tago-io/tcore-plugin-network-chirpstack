@@ -4,7 +4,7 @@
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tagocore": "<= 0.3"
+    "tagocore": ">= 0.3.2"
   },
   "tagocore": {
     "name": "Chirpstack LoRaWAN",

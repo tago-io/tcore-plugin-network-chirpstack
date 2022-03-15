@@ -1,3 +1,4 @@
+import { core } from "@tago-io/tcore-sdk";
 import axios, { AxiosRequestConfig } from "axios";
 import { Request, Response } from "express";
 import { core } from "@tago-io/tcore-sdk";
@@ -21,7 +22,7 @@ interface IDownlinkBuild {
 async function sendDownlink({ token, port, payload, url, confirmed, priority }: IDownlinkBuild) {
   const options: AxiosRequestConfig = {
     url,
-    method: "post",
+    method: "POST",
     headers: { Authorization: token },
     data: {
       downlinks: [
