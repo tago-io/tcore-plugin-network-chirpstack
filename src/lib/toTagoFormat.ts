@@ -7,6 +7,7 @@ interface IToTagoObject {
   [key: string]: string | number | boolean | IToTagoObject;
 }
 
+const fixVariable = (variable: string) => variable.replace(/ /g, "_").toLowerCase();
 /**
  * Transforms an object to a TagoIO data array object
  *
@@ -24,7 +25,7 @@ function toTagoFormat(objectItem: IToTagoObject, group?: string, prefix = "") {
   for (const key in objectItemCopy) {
     if (typeof objectItem[key] === "object") {
       result.push({
-        variable: (objectItemCopy[key]["variable"] || `${prefix}${key}`).toLowerCase(),
+        variable: fixVariable(objectItemCopy[key]["variable"] || `${prefix}${key}`),
         value: objectItemCopy[key]["value"],
         group: objectItemCopy[key]["serie"] || group,
         metadata: objectItemCopy[key]["metadata"],
@@ -33,14 +34,14 @@ function toTagoFormat(objectItem: IToTagoObject, group?: string, prefix = "") {
       });
     } else {
       result.push({
-        variable: `${prefix}${key}`.toLowerCase(),
+        variable: fixVariable(`${prefix}${key}`),
         value: objectItemCopy[key],
         group,
       });
     }
   }
 
-  return result as IDeviceDataLatLng;
+  return result as IDeviceDataLatLng[];
 }
 
 export default toTagoFormat;
