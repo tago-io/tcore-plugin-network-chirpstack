@@ -1,10 +1,10 @@
 {
   "name": "@tago-io/tcore-plugin-network-chirpstack",
-  "version": "0.0.2",
+  "version": "0.3.2",
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tagocore": ">= 0.3.2"
+    "tagocore": ">= 0.3.2 < 0.4.0"
   },
   "tagocore": {
     "name": "Chirpstack LoRaWAN",
@@ -22,29 +22,43 @@
       "device-data"
     ]
   },
+  "jest": {
+    "preset": "ts-jest"
+  },
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "node esbuild/build.js --watch",
     "linter": "eslint .",
     "build": "npm run linter; rm -rf ./build; node esbuild/build.js"
   },
   "dependencies": {
     "@tago-io/tcore-sdk": "0.3.2-alpha.0",
-    "axios": "^0.26.0",
+    "async": "3.2.3",
+    "axios": "^0.26.1",
     "body-parser": "^1.19.2",
-    "express": "^4.17.3"
+    "crypto": "^1.0.1",
+    "express": "^4.17.3",
+    "lora-packet": "^0.8.14",
+    "luxon": "^2.3.1",
+    "mqtt-connection": "4.1.0"
   },
   "devDependencies": {
+    "@types/async": "^3.2.12",
     "@types/express": "^4.17.13",
-    "@types/node": "^16.7.1",
-    "@typescript-eslint/eslint-plugin": "^5.12.1",
-    "@typescript-eslint/parser": "^5.12.1",
-    "esbuild": "^0.14.23",
-    "eslint": "^8.6.0",
-    "eslint-config-prettier": "^8.4.0",
+    "@types/luxon": "^2.3.0",
+    "@types/ms": "^0.7.31",
+    "@types/node": "17.0.21",
+    "esbuild": "^0.14.27",
+    "@typescript-eslint/eslint-plugin": "^5.15.0",
+    "@typescript-eslint/parser": "^5.15.0",
+    "eslint": "^8.11.0",
+    "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-jsdoc": "^37.9.4",
+    "eslint-plugin-jsdoc": "^38.0.4",
     "eslint-plugin-prettier": "^4.0.0",
-    "prettier": "^2.5.1"
+    "prettier": "^2.5.1",
+    "@types/jest": "^27.4.1",
+    "eslint-plugin-jest": "^26.1.1",
+    "ts-jest": "^27.1.3"
   }
 }
