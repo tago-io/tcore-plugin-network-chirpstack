@@ -21,7 +21,7 @@ const NetworkService = new ServiceModule({
       type: "number",
       required: true,
       placeholder: "8000",
-      defaultValue: "8000",
+      defaultValue: 8000,
     },
     {
       name: "Chirpstack endpoint",
@@ -31,7 +31,6 @@ const NetworkService = new ServiceModule({
       type: "number",
       required: false,
       placeholder: "http://localhost:8080",
-      defaultValue: "",
     },
     {
       name: "Downlink token",
@@ -41,7 +40,6 @@ const NetworkService = new ServiceModule({
       type: "number",
       required: false,
       placeholder: "",
-      defaultValue: "",
     },
     {
       name: "Authorization Code",

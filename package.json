@@ -1,16 +1,21 @@
 {
   "name": "@tago-io/tcore-plugin-network-chirpstack",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tagocore": ">= 0.3.2 < 0.4.0"
+    "tcore": ">= 0.4.0 < 0.5.0"
   },
-  "tagocore": {
+  "files": [
+    "build/**/*",
+    "assets/**/*"
+  ],
+  "tcore": {
     "name": "Chirpstack LoRaWAN",
     "short_description": "Adds support for Chirpstack LoRaWAN",
     "full_description": "./README.md",
     "icon": "./assets/icon.png",
+    "cluster": true,
     "types": [
       "service",
       "encoder",
@@ -23,12 +28,13 @@
     ]
   },
   "scripts": {
+    "pack": "tcore-plugin pack",
     "watch": "node esbuild/build.js --watch",
     "linter": "eslint .",
     "build": "npm run linter; rm -rf ./build; node esbuild/build.js"
   },
   "dependencies": {
-    "@tago-io/tcore-sdk": "0.3.2-alpha.0",
+    "@tago-io/tcore-sdk": "0.4.2",
     "axios": "^0.26.0",
     "body-parser": "^1.19.2",
     "express": "^4.17.3"
