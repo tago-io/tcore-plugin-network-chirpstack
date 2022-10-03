@@ -1,10 +1,10 @@
 {
   "name": "@tago-io/tcore-plugin-network-chirpstack",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": false,
   "main": "./build/index.js",
   "engines": {
-    "tcore": ">= 0.6.0 < 0.7.0"
+    "tcore": ">= 0.7.0 < 1.0.0"
   },
   "files": [
     "build/**/*",
