@@ -28,7 +28,7 @@ const NetworkService = new ServiceModule({
       tooltip: "Address of your Chirpstack server",
       icon: "cog",
       field: "url",
-      type: "number",
+      type: "string",
       required: false,
       placeholder: "http://localhost:8080",
     },
@@ -37,7 +37,7 @@ const NetworkService = new ServiceModule({
       tooltip: "Bearer token generated at Chirpstack to authorize downlinks",
       icon: "cog",
       field: "downlink_token",
-      type: "number",
+      type: "string",
       required: false,
       placeholder: "",
     },
@@ -149,8 +149,16 @@ NetworkService.onLoad = async (configParams: IConfigParam) => {
   await startServer();
 
   app.get("/", (req, res) => sendResponse(res, { body: { status: true, message: "Running" }, status: 200 }));
-  app.post("/uplink", (req, res) => uplinkService(configParams, req, res));
-  app.post("/downlink", (req, res) => downlinkService(configParams, req, res));
+  app.post("/uplink", (req, res) =>
+    uplinkService(configParams, req, res).catch((e) =>
+      sendResponse(res, { body: { status: false, message: e?.message || e }, status: 400 })
+    )
+  );
+  app.post("/downlink", (req, res) =>
+    downlinkService(configParams, req, res).catch((e) =>
+      sendResponse(res, { body: { status: false, message: e?.message || e }, status: 400 })
+    )
+  );
   // app.post("/error", (req, res) => res.send(""));
   app.get("/status", (req, res) => sendResponse(res, { body: { status: true, message: "Running" }, status: 200 }));
 
